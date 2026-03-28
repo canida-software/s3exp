@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "semi": true,
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "singleAttributePerLine": false,
+  "proseWrap": "never",
+  "sortImports": {
+    "newlinesBetween": true,
+    "sortSideEffects": false,
+    "internalPattern": ["@/"]
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**"]
+}

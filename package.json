@@ -1,14 +1,14 @@
 {
   "name": "s3exp",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "biome lint .",
-    "format": "biome check --write .",
-    "format:check": "biome check .",
+    "lint": "oxlint --deny-warnings .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -21,12 +21,13 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.9",
     "@types/node": "^24.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.21",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
     "typescript": "^5.9.3",
