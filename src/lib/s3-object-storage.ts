@@ -4,14 +4,6 @@ import { type S3ConnectionInput } from '@/lib/s3-connections-store';
 
 type ParsedS3Url = { basePrefix: string; bucket: string; endpoint: string; region: string };
 
-type KnownS3Error = {
-  $metadata?: { httpStatusCode?: number };
-  Code?: string;
-  code?: string;
-  message?: string;
-  name?: string;
-};
-
 export type BrowserEntry = {
   key: string;
   kind: 'directory' | 'file';
@@ -23,14 +15,6 @@ export type BrowserEntry = {
 export const ROOT_PATH = '/';
 
 const DEFAULT_REGION = 'us-east-1';
-
-function isKnownS3Error(error: unknown): error is KnownS3Error {
-  return typeof error === 'object' && error !== null;
-}
-
-function toLowerCaseValue(value: unknown): string {
-  return typeof value === 'string' ? value.toLowerCase() : '';
-}
 
 function parseS3Url(rawUrl: string): ParsedS3Url {
   let parsedUrl: URL;
@@ -91,54 +75,6 @@ function pathToPrefix(path: string, basePrefix: string): string {
     return basePrefix;
   }
   return `${basePrefix}${path.slice(1)}/`;
-}
-
-export function toS3ErrorMessage(error: unknown): string {
-  if (isKnownS3Error(error)) {
-    const errorCode = error.Code ?? error.code ?? error.name ?? '';
-    const errorMessage = error.message ?? '';
-    const errorCodeLower = toLowerCaseValue(errorCode);
-    const errorMessageLower = toLowerCaseValue(errorMessage);
-    const statusCode = error.$metadata?.httpStatusCode;
-
-    if (
-      errorMessageLower.includes('failed to fetch') ||
-      errorMessageLower.includes('networkerror') ||
-      errorMessageLower.includes('cors')
-    ) {
-      return 'Request blocked by CORS or network. Configure bucket CORS to allow this origin (for example http://localhost:5173) and methods GET/HEAD.';
-    }
-    if (errorCodeLower === 'invalidaccesskeyid') {
-      return 'Invalid access key ID.';
-    }
-    if (errorCodeLower === 'signaturedoesnotmatch') {
-      return 'Signature mismatch. Check secret key and URL.';
-    }
-    if (errorCodeLower === 'expiredtoken') {
-      return 'Credentials expired. Use fresh credentials.';
-    }
-    if (errorCodeLower === 'nosuchbucket') {
-      return 'Bucket not found. Check the URL bucket name.';
-    }
-    if (errorCodeLower === 'authorizationheadermalformed' || errorCodeLower === 'permanentredirect') {
-      return 'Region mismatch. Check the region in your S3 URL.';
-    }
-    if (errorCodeLower === 'accessdenied' || statusCode === 403) {
-      return 'Access denied. Check credentials and s3:ListBucket permission on the bucket.';
-    }
-    if (statusCode === 404) {
-      return 'Bucket or path not found.';
-    }
-    if (errorMessage.length > 0) {
-      return errorMessage;
-    }
-  }
-
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-
-  return 'Unable to process the S3 request.';
 }
 
 export function normalizePath(path: string): string {

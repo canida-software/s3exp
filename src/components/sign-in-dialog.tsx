@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { selectActiveConnection, type S3ConnectionInput, useS3ConnectionsStore } from '@/lib/s3-connections-store';
-import { testS3Connection, toS3ErrorMessage } from '@/lib/s3-object-storage';
+import { testS3Connection } from '@/lib/s3-object-storage';
 
 type ConnectionFormApi = ReturnType<
   typeof useForm<
@@ -48,6 +48,13 @@ const connectionSchema = z.object({
   secretAccessKey: z.string().min(1, 'Secret key is required.'),
   url: z.string().url('Enter a valid S3 URL.'),
 });
+
+function toRawErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.length > 0) {
+    return error.message;
+  }
+  return String(error);
+}
 
 function toDefaultValues(connection: S3ConnectionInput | null): S3ConnectionInput {
   if (!connection) {
@@ -188,7 +195,7 @@ function SignInDialog() {
         saveConnection(parsed.data);
         setOpen(false);
       } catch (error) {
-        setSubmitError(toS3ErrorMessage(error));
+        setSubmitError(toRawErrorMessage(error));
       } finally {
         setIsSubmitting(false);
       }

@@ -7,9 +7,15 @@ import {
   fetchDirectoryEntries,
   parentPath,
   ROOT_PATH,
-  toS3ErrorMessage,
   type BrowserEntry,
 } from '@/lib/s3-object-storage';
+
+function toRawErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.length > 0) {
+    return error.message;
+  }
+  return String(error);
+}
 
 function App() {
   const connection = useS3ConnectionsStore(selectActiveConnection);
@@ -29,7 +35,7 @@ function App() {
       setEntries(await fetchDirectoryEntries(connection, path));
     } catch (error) {
       setEntries([]);
-      setListError(toS3ErrorMessage(error));
+      setListError(toRawErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
