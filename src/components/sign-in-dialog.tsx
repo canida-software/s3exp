@@ -13,7 +13,7 @@ import {
   DialogTitle as DialogPrimitiveTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { selectActiveConnection, type S3ConnectionInput, useS3ConnectionsStore } from '@/lib/s3-connections-store';
+import { type S3ConnectionInput, useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import { testS3Connection } from '@/lib/s3-object-storage';
 
 const connectionSchema = z.object({
@@ -30,8 +30,9 @@ function toRawErrorMessage(error: unknown): string {
 }
 
 function SignInDialog() {
-  const connection = useS3ConnectionsStore(selectActiveConnection);
+  const connection = useS3ConnectionsStore((state) => state.connection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
+
   const [open, setOpen] = useState<boolean>(() => connection === undefined);
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

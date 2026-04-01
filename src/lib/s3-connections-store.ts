@@ -10,10 +10,6 @@ type S3ConnectionsStore = {
   saveConnection: (connection: S3ConnectionInput) => S3Connection;
 };
 
-export function selectActiveConnection(store: S3ConnectionsStore): S3Connection | undefined {
-  return store.connection;
-}
-
 export const useS3ConnectionsStore = create<S3ConnectionsStore>()(
   persist(
     (set) => ({

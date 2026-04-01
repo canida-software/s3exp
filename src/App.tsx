@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { BrowserShell } from '@/components/s3-browser-shell';
-import { selectActiveConnection, useS3ConnectionsStore } from '@/lib/s3-connections-store';
+import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import {
   childPath,
   fetchDirectoryEntries,
@@ -18,7 +18,7 @@ function toRawErrorMessage(error: unknown): string {
 }
 
 function App() {
-  const connection = useS3ConnectionsStore(selectActiveConnection);
+  const connection = useS3ConnectionsStore((state) => state.connection);
   const [entries, setEntries] = useState<BrowserEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
