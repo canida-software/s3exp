@@ -29,13 +29,6 @@ function toRawErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function toDefaultValues(connection: S3ConnectionInput | undefined): S3ConnectionInput {
-  if (!connection) {
-    return { url: '', accessKey: '', secretKey: '' };
-  }
-  return connection;
-}
-
 function SignInDialog() {
   const connection = useS3ConnectionsStore(selectActiveConnection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
@@ -57,7 +50,7 @@ function SignInDialog() {
     undefined,
     undefined
   >({
-    defaultValues: toDefaultValues(connection),
+    defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
     onSubmit: async ({ value }) => {
       const parsed = connectionSchema.safeParse(value);
       if (!parsed.success) {
@@ -79,7 +72,7 @@ function SignInDialog() {
   });
   const resetForm = useCallback(() => {
     setSubmitError(null);
-    form.reset(toDefaultValues(connection));
+    form.reset(connection ?? { url: '', accessKey: '', secretKey: '' });
   }, [connection, form]);
 
   useEffect(() => {
