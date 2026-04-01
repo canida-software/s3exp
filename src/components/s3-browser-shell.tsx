@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { File, Folder, RefreshCcw } from 'lucide-react';
 
 import { SignInDialog } from '@/components/sign-in-dialog';
@@ -86,6 +87,8 @@ function BrowserShell({
   path,
   rootPath,
 }: BrowserShellProps) {
+  const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-8">
       <section className="mx-auto flex w-full max-w-6xl flex-col overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -99,7 +102,10 @@ function BrowserShell({
               <RefreshCcw className="size-4" />
               Refresh
             </Button>
-            <SignInDialog />
+            <Button onClick={() => setIsSignInDialogOpen(true)} type="button">
+              Connection
+            </Button>
+            <SignInDialog onOpenChange={setIsSignInDialogOpen} open={isSignInDialogOpen} />
           </div>
         </header>
 
