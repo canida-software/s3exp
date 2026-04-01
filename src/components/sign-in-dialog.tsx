@@ -1,5 +1,4 @@
 import { useForm } from '@tanstack/react-form';
-import { Eye, EyeOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
 
@@ -13,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import { testS3Connection } from '@/lib/s3-object-storage';
 
@@ -35,7 +35,6 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const connection = useS3ConnectionsStore((state) => state.connection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
 
-  const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
@@ -122,27 +121,13 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
               {(field) => (
                 <label className="grid gap-1.5 text-sm">
                   <span className="text-muted-foreground">Secret Key</span>
-                  <div className="relative">
-                    <Input
-                      type={showSecret ? 'text' : 'password'}
-                      className="pr-10"
-                      value={field.state.value}
-                      onChange={(event) => field.handleChange(event.target.value)}
-                      onBlur={field.handleBlur}
-                      disabled={isSubmitting}
-                      placeholder="••••••••"
-                    />
-                    <Button
-                      type="button"
-                      aria-label={showSecret ? 'Hide secret key' : 'Show secret key'}
-                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
-                      onClick={() => setShowSecret((previous) => !previous)}
-                      disabled={isSubmitting}
-                      variant="ghost"
-                    >
-                      {showSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </Button>
-                  </div>
+                  <PasswordInput
+                    value={field.state.value}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    onBlur={field.handleBlur}
+                    disabled={isSubmitting}
+                    placeholder="••••••••"
+                  />
                 </label>
               )}
             </form.Field>
