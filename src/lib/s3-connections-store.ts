@@ -1,11 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-export type S3ConnectionInput = {
-  url: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-};
+export type S3ConnectionInput = { url: string; accessKeyId: string; secretAccessKey: string };
 
 export type S3Connection = S3ConnectionInput;
 
@@ -23,15 +19,10 @@ export const useS3ConnectionsStore = create<S3ConnectionsStore>()(
     (set) => ({
       connection: null,
       saveConnection: (connection) => {
-        set({
-          connection,
-        });
+        set({ connection });
         return connection;
       },
     }),
-    {
-      name: 's3exp.connections',
-      storage: createJSONStorage(() => localStorage),
-    },
+    { name: 's3exp.connections', storage: createJSONStorage(() => localStorage) },
   ),
 );

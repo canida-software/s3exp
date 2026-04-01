@@ -7,9 +7,7 @@
     "types": ["node"],
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "paths": { "@/*": ["./src/*"] },
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

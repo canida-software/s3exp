@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
+import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -51,22 +51,28 @@ DialogContent.displayName = 'DialogContent';
 
 const DialogTitle = React.forwardRef<HTMLHeadingElement, React.ComponentProps<typeof DialogPrimitive.Title>>(
   ({ className, ...props }, ref) => (
-    <DialogPrimitive.Title className={cn('text-lg font-semibold', className)} data-slot="dialog-title" ref={ref} {...props} />
-  ),
-);
-
-DialogTitle.displayName = 'DialogTitle';
-
-const DialogDescription = React.forwardRef<HTMLParagraphElement, React.ComponentProps<typeof DialogPrimitive.Description>>(
-  ({ className, ...props }, ref) => (
-    <DialogPrimitive.Description
-      className={cn('text-sm text-muted-foreground', className)}
-      data-slot="dialog-description"
+    <DialogPrimitive.Title
+      className={cn('text-lg font-semibold', className)}
+      data-slot="dialog-title"
       ref={ref}
       {...props}
     />
   ),
 );
+
+DialogTitle.displayName = 'DialogTitle';
+
+const DialogDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.ComponentProps<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    className={cn('text-sm text-muted-foreground', className)}
+    data-slot="dialog-description"
+    ref={ref}
+    {...props}
+  />
+));
 
 DialogDescription.displayName = 'DialogDescription';
 

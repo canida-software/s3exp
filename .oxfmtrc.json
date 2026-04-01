@@ -7,11 +7,8 @@
   "trailingComma": "all",
   "arrowParens": "always",
   "singleAttributePerLine": false,
+  "objectWrap": "collapse",
   "proseWrap": "never",
-  "sortImports": {
-    "newlinesBetween": true,
-    "sortSideEffects": false,
-    "internalPattern": ["@/"]
-  },
+  "sortImports": { "newlinesBetween": true, "sortSideEffects": false, "internalPattern": ["@/"] },
   "ignorePatterns": ["dist/**", "node_modules/**"]
 }
