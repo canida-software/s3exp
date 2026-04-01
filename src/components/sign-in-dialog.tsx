@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import { Eye, EyeOff } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -15,37 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { selectActiveConnection, type S3ConnectionInput, useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import { testS3Connection } from '@/lib/s3-object-storage';
-
-type DialogProps = {
-  open: boolean;
-  onOpenChange: (nextOpen: boolean) => void;
-  disablePointerDismissal: boolean;
-  title: string;
-  description: string;
-  children: ReactNode;
-};
-
-type SignInFormState = {
-  form: ReturnType<
-    typeof useForm<
-      S3ConnectionInput,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined
-    >
-  >;
-  isSubmitting: boolean;
-  resetForm: () => void;
-  submitError: string | null;
-};
 
 const connectionSchema = z.object({
   accessKeyId: z.string().min(1, 'Access key is required.'),
@@ -67,25 +36,13 @@ function toDefaultValues(connection: S3ConnectionInput | null): S3ConnectionInpu
   return connection;
 }
 
-function Dialog({ open, onOpenChange, disablePointerDismissal, title, description, children }: DialogProps) {
-  return (
-    <DialogRoot disablePointerDismissal={disablePointerDismissal} onOpenChange={onOpenChange} open={open}>
-      <DialogPrimitiveContent className="p-0">
-        <DialogPrimitiveHeader>
-          <DialogPrimitiveTitle>{title}</DialogPrimitiveTitle>
-          <DialogPrimitiveDescription>{description}</DialogPrimitiveDescription>
-        </DialogPrimitiveHeader>
-        {children}
-      </DialogPrimitiveContent>
-    </DialogRoot>
-  );
-}
-
-function useSignInFormState(connection: S3ConnectionInput | null, onSuccess: () => void): SignInFormState {
+function SignInDialog() {
+  const connection = useS3ConnectionsStore(selectActiveConnection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
+  const [open, setOpen] = useState<boolean>(() => connection === null);
+  const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
   const form = useForm<
     S3ConnectionInput,
     undefined,
@@ -112,7 +69,7 @@ function useSignInFormState(connection: S3ConnectionInput | null, onSuccess: () 
       try {
         await testS3Connection(parsed.data);
         saveConnection(parsed.data);
-        onSuccess();
+        setOpen(false);
       } catch (error) {
         setSubmitError(toRawErrorMessage(error));
       } finally {
@@ -120,20 +77,10 @@ function useSignInFormState(connection: S3ConnectionInput | null, onSuccess: () 
       }
     },
   });
-
   const resetForm = useCallback(() => {
     setSubmitError(null);
     form.reset(toDefaultValues(connection));
   }, [connection, form]);
-
-  return { form, isSubmitting, resetForm, submitError };
-}
-
-function SignInDialog() {
-  const connection = useS3ConnectionsStore(selectActiveConnection);
-  const [open, setOpen] = useState<boolean>(() => connection === null);
-  const [showSecret, setShowSecret] = useState(false);
-  const { form, isSubmitting, resetForm, submitError } = useSignInFormState(connection, () => setOpen(false));
 
   useEffect(() => {
     resetForm();
@@ -157,91 +104,99 @@ function SignInDialog() {
         Connection
       </Button>
 
-      <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal={!connection} title="Connect to S3" description="Credentials stay in localStorage in your browser; only direct requests are sent to your object storage.">
-        <form
-          className="space-y-4 p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void form.handleSubmit();
-          }}
-        >
-          <form.Field name="url">
-            {(field) => (
-              <label className="grid gap-1.5 text-sm">
-                <span className="text-muted-foreground">S3 URL</span>
-                <Input
-                  autoFocus
-                  value={field.state.value}
-                  onChange={(event) => field.handleChange(event.target.value)}
-                  onBlur={field.handleBlur}
-                  disabled={isSubmitting}
-                  placeholder="https://bucket.s3.eu-central-1.amazonaws.com/prefix/"
-                />
-              </label>
-            )}
-          </form.Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <form.Field name="accessKeyId">
+      <DialogRoot disablePointerDismissal={!connection} onOpenChange={handleOpenChange} open={open}>
+        <DialogPrimitiveContent className="p-0">
+          <DialogPrimitiveHeader>
+            <DialogPrimitiveTitle>Connect to S3</DialogPrimitiveTitle>
+            <DialogPrimitiveDescription>
+              Credentials stay in localStorage in your browser; only direct requests are sent to your object storage.
+            </DialogPrimitiveDescription>
+          </DialogPrimitiveHeader>
+          <form
+            className="space-y-4 p-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void form.handleSubmit();
+            }}
+          >
+            <form.Field name="url">
               {(field) => (
                 <label className="grid gap-1.5 text-sm">
-                  <span className="text-muted-foreground">Access Key</span>
+                  <span className="text-muted-foreground">S3 URL</span>
                   <Input
+                    autoFocus
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
                     disabled={isSubmitting}
-                    placeholder="AKIA..."
+                    placeholder="https://bucket.s3.eu-central-1.amazonaws.com/prefix/"
                   />
                 </label>
               )}
             </form.Field>
 
-            <form.Field name="secretAccessKey">
-              {(field) => (
-                <label className="grid gap-1.5 text-sm">
-                  <span className="text-muted-foreground">Secret Key</span>
-                  <div className="relative">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <form.Field name="accessKeyId">
+                {(field) => (
+                  <label className="grid gap-1.5 text-sm">
+                    <span className="text-muted-foreground">Access Key</span>
                     <Input
-                      type={showSecret ? 'text' : 'password'}
-                      className="pr-10"
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value)}
                       onBlur={field.handleBlur}
                       disabled={isSubmitting}
-                      placeholder="••••••••"
+                      placeholder="AKIA..."
                     />
-                    <Button
-                      type="button"
-                      aria-label={showSecret ? 'Hide secret key' : 'Show secret key'}
-                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
-                      onClick={() => setShowSecret((previous) => !previous)}
-                      disabled={isSubmitting}
-                      variant="ghost"
-                    >
-                      {showSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </Button>
-                  </div>
-                </label>
+                  </label>
+                )}
+              </form.Field>
+
+              <form.Field name="secretAccessKey">
+                {(field) => (
+                  <label className="grid gap-1.5 text-sm">
+                    <span className="text-muted-foreground">Secret Key</span>
+                    <div className="relative">
+                      <Input
+                        type={showSecret ? 'text' : 'password'}
+                        className="pr-10"
+                        value={field.state.value}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        onBlur={field.handleBlur}
+                        disabled={isSubmitting}
+                        placeholder="••••••••"
+                      />
+                      <Button
+                        type="button"
+                        aria-label={showSecret ? 'Hide secret key' : 'Show secret key'}
+                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+                        onClick={() => setShowSecret((previous) => !previous)}
+                        disabled={isSubmitting}
+                        variant="ghost"
+                      >
+                        {showSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </Button>
+                    </div>
+                  </label>
+                )}
+              </form.Field>
+            </div>
+
+            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+
+            <DialogPrimitiveFooter>
+              {connection && (
+                <Button type="button" onClick={() => setOpen(false)} disabled={isSubmitting} variant="outline">
+                  Close
+                </Button>
               )}
-            </form.Field>
-          </div>
-
-          {submitError && <p className="text-sm text-destructive">{submitError}</p>}
-
-          <DialogPrimitiveFooter>
-            {connection && (
-              <Button type="button" onClick={() => setOpen(false)} disabled={isSubmitting} variant="outline">
-                Close
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Testing...' : 'Connect'}
               </Button>
-            )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Testing...' : 'Connect'}
-            </Button>
-          </DialogPrimitiveFooter>
-        </form>
-      </Dialog>
+            </DialogPrimitiveFooter>
+          </form>
+        </DialogPrimitiveContent>
+      </DialogRoot>
     </>
   );
 }
