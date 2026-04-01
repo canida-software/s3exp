@@ -13,7 +13,7 @@ type EntryTableProps = {
 };
 
 type BrowserShellProps = {
-  connection: S3Connection | null;
+  connection: S3Connection | undefined;
   entries: BrowserEntry[];
   goToParentDirectory: () => void;
   isLoading: boolean;

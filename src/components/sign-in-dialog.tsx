@@ -17,9 +17,9 @@ import { selectActiveConnection, type S3ConnectionInput, useS3ConnectionsStore }
 import { testS3Connection } from '@/lib/s3-object-storage';
 
 const connectionSchema = z.object({
-  accessKeyId: z.string().min(1, 'Access key is required.'),
-  secretAccessKey: z.string().min(1, 'Secret key is required.'),
   url: z.string().url('Enter a valid S3 URL.'),
+  accessKey: z.string().min(1, 'Access key is required.'),
+  secretKey: z.string().min(1, 'Secret key is required.'),
 });
 
 function toRawErrorMessage(error: unknown): string {
@@ -29,9 +29,9 @@ function toRawErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function toDefaultValues(connection: S3ConnectionInput | null): S3ConnectionInput {
+function toDefaultValues(connection: S3ConnectionInput | undefined): S3ConnectionInput {
   if (!connection) {
-    return { accessKeyId: '', secretAccessKey: '', url: '' };
+    return { url: '', accessKey: '', secretKey: '' };
   }
   return connection;
 }
@@ -39,7 +39,7 @@ function toDefaultValues(connection: S3ConnectionInput | null): S3ConnectionInpu
 function SignInDialog() {
   const connection = useS3ConnectionsStore(selectActiveConnection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
-  const [open, setOpen] = useState<boolean>(() => connection === null);
+  const [open, setOpen] = useState<boolean>(() => connection === undefined);
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -87,10 +87,13 @@ function SignInDialog() {
     if (!connection) setOpen(true);
   }, [connection, resetForm]);
 
-  const handleOpenChange = useCallback((nextOpen: boolean) => {
-    if (!nextOpen && !connection) return;
-    setOpen(nextOpen);
-  }, [connection]);
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen && !connection) return;
+      setOpen(nextOpen);
+    },
+    [connection],
+  );
 
   return (
     <>
@@ -137,7 +140,7 @@ function SignInDialog() {
             </form.Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <form.Field name="accessKeyId">
+              <form.Field name="accessKey">
                 {(field) => (
                   <label className="grid gap-1.5 text-sm">
                     <span className="text-muted-foreground">Access Key</span>
@@ -152,7 +155,7 @@ function SignInDialog() {
                 )}
               </form.Field>
 
-              <form.Field name="secretAccessKey">
+              <form.Field name="secretKey">
                 {(field) => (
                   <label className="grid gap-1.5 text-sm">
                     <span className="text-muted-foreground">Secret Key</span>

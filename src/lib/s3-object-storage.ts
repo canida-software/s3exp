@@ -62,7 +62,7 @@ function parseS3Url(rawUrl: string): ParsedS3Url {
 function createS3Client(connection: S3ConnectionInput) {
   const target = parseS3Url(connection.url);
   const client = new S3Client({
-    credentials: { accessKeyId: connection.accessKeyId, secretAccessKey: connection.secretAccessKey },
+    credentials: { accessKeyId: connection.accessKey, secretAccessKey: connection.secretKey },
     endpoint: target.endpoint,
     forcePathStyle: true,
     region: target.region,
