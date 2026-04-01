@@ -17,7 +17,7 @@ type BrowserShellProps = {
   entries: BrowserEntry[];
   goToParentDirectory: () => void;
   isLoading: boolean;
-  listError: string | null;
+  listError: string | undefined;
   onOpenDirectory: (directoryName: string) => void;
   onRefresh: () => void;
   path: string;

@@ -21,7 +21,7 @@ function App() {
   const connection = useS3ConnectionsStore((state) => state.connection);
   const [entries, setEntries] = useState<BrowserEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string>();
   const [path, setPath] = useState(ROOT_PATH);
 
   const loadEntries = useCallback(async () => {
@@ -30,7 +30,7 @@ function App() {
     }
 
     setIsLoading(true);
-    setListError(null);
+    setListError(undefined);
     try {
       setEntries(await fetchDirectoryEntries(connection, path));
     } catch (error) {
@@ -45,7 +45,7 @@ function App() {
     if (!connection) {
       setEntries([]);
       setIsLoading(false);
-      setListError(null);
+      setListError(undefined);
       return;
     }
     void loadEntries();

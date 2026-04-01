@@ -36,7 +36,7 @@ function SignInDialog() {
   const [open, setOpen] = useState<boolean>(() => connection === undefined);
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string>();
   const form = useForm<
     S3ConnectionInput,
     undefined,
@@ -59,7 +59,7 @@ function SignInDialog() {
         return;
       }
       setIsSubmitting(true);
-      setSubmitError(null);
+      setSubmitError(undefined);
       try {
         await testS3Connection(parsed.data);
         saveConnection(parsed.data);
@@ -72,7 +72,7 @@ function SignInDialog() {
     },
   });
   const resetForm = useCallback(() => {
-    setSubmitError(null);
+    setSubmitError(undefined);
     form.reset(connection ?? { url: '', accessKey: '', secretKey: '' });
   }, [connection, form]);
 
