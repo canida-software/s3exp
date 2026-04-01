@@ -230,14 +230,14 @@ function SignInDialog() {
             </form.Field>
           </div>
 
-          {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
+          {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
           <DialogPrimitiveFooter>
-            {connection ? (
+            {connection && (
               <Button type="button" onClick={() => setOpen(false)} disabled={isSubmitting} variant="outline">
                 Close
               </Button>
-            ) : null}
+            )}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Testing...' : 'Connect'}
             </Button>

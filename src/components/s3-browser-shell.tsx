@@ -123,7 +123,7 @@ function BrowserShell({
             <Input readOnly value={path} />
           </div>
 
-          {listError ? <p className="text-sm text-destructive">{listError}</p> : null}
+          {listError && <p className="text-sm text-destructive">{listError}</p>}
 
           <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
