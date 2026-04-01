@@ -25,8 +25,6 @@ type DialogProps = {
   children: ReactNode;
 };
 
-type OpenConnectionButtonProps = { onOpen: () => void };
-
 type SignInFormState = {
   form: ReturnType<
     typeof useForm<
@@ -80,14 +78,6 @@ function Dialog({ open, onOpenChange, disablePointerDismissal, title, descriptio
         {children}
       </DialogPrimitiveContent>
     </DialogRoot>
-  );
-}
-
-function OpenConnectionButton({ onOpen }: OpenConnectionButtonProps) {
-  return (
-    <Button type="button" onClick={onOpen}>
-      Connection
-    </Button>
   );
 }
 
@@ -157,7 +147,15 @@ function SignInDialog() {
 
   return (
     <>
-      <OpenConnectionButton onOpen={() => { resetForm(); setOpen(true); }} />
+      <Button
+        type="button"
+        onClick={() => {
+          resetForm();
+          setOpen(true);
+        }}
+      >
+        Connection
+      </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal={!connection} title="Connect to S3" description="Credentials stay in localStorage in your browser; only direct requests are sent to your object storage.">
         <form
