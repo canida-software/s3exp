@@ -1,6 +1,6 @@
 import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 
-import { type S3ConnectionInput } from '@/lib/s3-connections-store';
+import { type S3Connection } from '@/lib/s3-connections-store';
 
 type ParsedS3Url = { basePrefix: string; bucket: string; endpoint: string; region: string };
 
@@ -59,7 +59,7 @@ function parseS3Url(rawUrl: string): ParsedS3Url {
   return { basePrefix, bucket, endpoint: `${parsedUrl.protocol}//${endpointHost}`, region };
 }
 
-function createS3Client(connection: S3ConnectionInput) {
+function createS3Client(connection: S3Connection) {
   const target = parseS3Url(connection.url);
   const client = new S3Client({
     credentials: { accessKeyId: connection.accessKey, secretAccessKey: connection.secretKey },
@@ -117,14 +117,14 @@ export function formatModifiedDate(value?: Date): string {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(value);
 }
 
-export async function testS3Connection(connection: S3ConnectionInput): Promise<void> {
+export async function testS3Connection(connection: S3Connection): Promise<void> {
   const { client, target } = createS3Client(connection);
   await client.send(
     new ListObjectsV2Command({ Bucket: target.bucket, MaxKeys: 1, Prefix: target.basePrefix || undefined }),
   );
 }
 
-export async function fetchDirectoryEntries(connection: S3ConnectionInput, path: string): Promise<BrowserEntry[]> {
+export async function fetchDirectoryEntries(connection: S3Connection, path: string): Promise<BrowserEntry[]> {
   const { client, target } = createS3Client(connection);
   const prefix = pathToPrefix(path, target.basePrefix);
   const result = await client.send(

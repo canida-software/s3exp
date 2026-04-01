@@ -13,7 +13,7 @@ import {
   DialogTitle as DialogPrimitiveTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { type S3ConnectionInput, useS3ConnectionsStore } from '@/lib/s3-connections-store';
+import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import { testS3Connection } from '@/lib/s3-object-storage';
 
 const connectionSchema = z.object({
@@ -37,20 +37,7 @@ function SignInDialog() {
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
-  const form = useForm<
-    S3ConnectionInput,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  >({
+  const form = useForm({
     defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
     onSubmit: async ({ value }) => {
       const parsed = connectionSchema.safeParse(value);
