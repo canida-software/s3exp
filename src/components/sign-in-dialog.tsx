@@ -5,12 +5,12 @@ import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
-  Dialog as DialogRoot,
-  DialogContent as DialogPrimitiveContent,
-  DialogDescription as DialogPrimitiveDescription,
-  DialogFooter as DialogPrimitiveFooter,
-  DialogHeader as DialogPrimitiveHeader,
-  DialogTitle as DialogPrimitiveTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
@@ -29,10 +29,7 @@ function toRawErrorMessage(error: unknown): string {
   return String(error);
 }
 
-type SignInDialogProps = {
-  open: boolean;
-  onOpenChange: (nextOpen: boolean) => void;
-};
+type SignInDialogProps = { open: boolean; onOpenChange: (nextOpen: boolean) => void };
 
 function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const connection = useS3ConnectionsStore((state) => state.connection);
@@ -41,6 +38,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
+
   const form = useForm({
     defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
     onSubmit: async ({ value }) => {
@@ -72,14 +70,14 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   }, [open, resetForm]);
 
   return (
-    <DialogRoot disablePointerDismissal={!connection} onOpenChange={onOpenChange} open={open}>
-      <DialogPrimitiveContent className="p-0">
-        <DialogPrimitiveHeader>
-          <DialogPrimitiveTitle>Connect to S3</DialogPrimitiveTitle>
-          <DialogPrimitiveDescription>
+    <Dialog disablePointerDismissal={!connection} onOpenChange={onOpenChange} open={open}>
+      <DialogContent className="p-0">
+        <DialogHeader>
+          <DialogTitle>Connect to S3</DialogTitle>
+          <DialogDescription>
             Credentials stay in localStorage in your browser; only direct requests are sent to your object storage.
-          </DialogPrimitiveDescription>
-        </DialogPrimitiveHeader>
+          </DialogDescription>
+        </DialogHeader>
         <form
           className="space-y-4 p-5"
           onSubmit={(event) => {
@@ -152,7 +150,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
 
           {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
-          <DialogPrimitiveFooter>
+          <DialogFooter>
             {connection && (
               <Button type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting} variant="outline">
                 Close
@@ -161,10 +159,10 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Testing...' : 'Connect'}
             </Button>
-          </DialogPrimitiveFooter>
+          </DialogFooter>
         </form>
-      </DialogPrimitiveContent>
-    </DialogRoot>
+      </DialogContent>
+    </Dialog>
   );
 }
 
