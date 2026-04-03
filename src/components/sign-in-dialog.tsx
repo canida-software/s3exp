@@ -35,32 +35,47 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const connection = useS3ConnectionsStore((state) => state.connection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string>();
+  const [isTesting, setIsTesting] = useState(false);
+  const [testErrorMessage, setTestErrorMessage] = useState<string>();
+  const [testSuccessMessage, setTestSuccessMessage] = useState<string>();
 
   const form = useForm({
     defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
-    onSubmit: async ({ value }) => {
-      const parsed = connectionSchema.safeParse(value);
-      if (!parsed.success) {
-        setSubmitError(parsed.error.issues[0]?.message ?? 'Invalid connection values.');
-        return;
-      }
-      setIsSubmitting(true);
-      setSubmitError(undefined);
-      try {
-        await testS3Connection(parsed.data);
-        saveConnection(parsed.data);
-        onOpenChange(false);
-      } catch (error) {
-        setSubmitError(toRawErrorMessage(error));
-      } finally {
-        setIsSubmitting(false);
-      }
+    validators: { onSubmit: connectionSchema },
+    onSubmit: ({ value }) => {
+      saveConnection(value);
+      setTestErrorMessage(undefined);
+      setTestSuccessMessage(undefined);
+      onOpenChange(false);
     },
   });
+
+  const runConnectionCheck = useCallback(async () => {
+    await form.validate('submit');
+    if (!form.state.isValid) {
+      setTestSuccessMessage(undefined);
+      setTestErrorMessage('Please fix the form values before testing.');
+      return;
+    }
+
+    setIsTesting(true);
+    setTestErrorMessage(undefined);
+    setTestSuccessMessage(undefined);
+    try {
+      await testS3Connection(form.state.values);
+      setTestSuccessMessage('Connection test succeeded.');
+    } catch (error) {
+      setTestErrorMessage(toRawErrorMessage(error));
+    } finally {
+      setIsTesting(false);
+    }
+  }, [form]);
+  const hasValidationError = Boolean(form.state.errorMap.onSubmit);
+
   const resetForm = useCallback(() => {
-    setSubmitError(undefined);
+    setIsTesting(false);
+    setTestErrorMessage(undefined);
+    setTestSuccessMessage(undefined);
     form.reset(connection ?? { url: '', accessKey: '', secretKey: '' });
   }, [connection, form]);
 
@@ -94,7 +109,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                   value={field.state.value}
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}
-                  disabled={isSubmitting}
+                  disabled={isTesting}
                   placeholder="https://bucket.s3.eu-central-1.amazonaws.com/prefix/"
                 />
               </label>
@@ -110,7 +125,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    disabled={isSubmitting}
+                    disabled={isTesting}
                     placeholder="AKIA..."
                   />
                 </label>
@@ -125,7 +140,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    disabled={isSubmitting}
+                    disabled={isTesting}
                     placeholder="••••••••"
                   />
                 </label>
@@ -133,16 +148,28 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
             </form.Field>
           </div>
 
-          {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+          {hasValidationError && <p className="text-sm text-destructive">Please fix the form values.</p>}
+          {testErrorMessage && <p className="text-sm text-destructive">{testErrorMessage}</p>}
+          {testSuccessMessage && <p className="text-sm text-emerald-700">{testSuccessMessage}</p>}
 
           <DialogFooter>
             {connection && (
-              <Button type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting} variant="outline">
+              <Button type="button" onClick={() => onOpenChange(false)} disabled={isTesting} variant="outline">
                 Close
               </Button>
             )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Testing...' : 'Connect'}
+            <Button
+              type="button"
+              disabled={isTesting}
+              onClick={() => {
+                void runConnectionCheck();
+              }}
+              variant="outline"
+            >
+              {isTesting ? 'Testing...' : 'Test'}
+            </Button>
+            <Button type="submit" disabled={isTesting}>
+              Connect
             </Button>
           </DialogFooter>
         </form>
