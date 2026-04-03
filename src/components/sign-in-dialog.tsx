@@ -22,6 +22,8 @@ const connectionSchema = z.object({
   secretKey: z.string().min(1, 'Secret key is required.'),
 });
 
+type TestState = 'PROGRESS' | 'SUCCESS' | 'ERROR';
+
 function toRawErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.length > 0) {
     return error.message;
@@ -29,62 +31,55 @@ function toRawErrorMessage(error: unknown): string {
   return String(error);
 }
 
-type SignInDialogProps = { open: boolean; onOpenChange: (nextOpen: boolean) => void };
-
-function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
+type SignInDialogProps = { open: boolean; onOpen: (next: boolean) => void };
+function SignInDialog({ open, onOpen }: SignInDialogProps) {
   const connection = useS3ConnectionsStore((state) => state.connection);
   const saveConnection = useS3ConnectionsStore((state) => state.saveConnection);
 
-  const [isTesting, setIsTesting] = useState(false);
-  const [testErrorMessage, setTestErrorMessage] = useState<string>();
-  const [testSuccessMessage, setTestSuccessMessage] = useState<string>();
+  const [testState, setTestState] = useState<TestState>();
+  const [testMessage, setTestMessage] = useState('');
 
   const form = useForm({
     defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
     validators: { onSubmit: connectionSchema },
     onSubmit: ({ value }) => {
       saveConnection(value);
-      setTestErrorMessage(undefined);
-      setTestSuccessMessage(undefined);
-      onOpenChange(false);
+      setTestState(undefined);
+      setTestMessage('');
+      onOpen(false);
     },
   });
 
   const runConnectionCheck = useCallback(async () => {
     await form.validate('submit');
     if (!form.state.isValid) {
-      setTestSuccessMessage(undefined);
-      setTestErrorMessage('Please fix the form values before testing.');
+      setTestState('ERROR');
+      setTestMessage(form.state.errorMap.onSubmit?.message[0].message ?? 'Form validation failed.');
       return;
     }
 
-    setIsTesting(true);
-    setTestErrorMessage(undefined);
-    setTestSuccessMessage(undefined);
+    setTestState('PROGRESS');
+    setTestMessage('');
     try {
       await testS3Connection(form.state.values);
-      setTestSuccessMessage('Connection test succeeded.');
+      setTestState('SUCCESS');
+      setTestMessage('Connection test succeeded.');
     } catch (error) {
-      setTestErrorMessage(toRawErrorMessage(error));
-    } finally {
-      setIsTesting(false);
+      setTestState('ERROR');
+      setTestMessage(toRawErrorMessage(error));
     }
   }, [form]);
-  const hasValidationError = Boolean(form.state.errorMap.onSubmit);
-
-  const resetForm = useCallback(() => {
-    setIsTesting(false);
-    setTestErrorMessage(undefined);
-    setTestSuccessMessage(undefined);
-    form.reset(connection ?? { url: '', accessKey: '', secretKey: '' });
-  }, [connection, form]);
 
   useEffect(() => {
-    if (open) resetForm();
-  }, [open, resetForm]);
+    if (open) {
+      setTestState(undefined);
+      setTestMessage('');
+      form.reset();
+    }
+  }, [open, form]);
 
   return (
-    <Dialog disablePointerDismissal={!connection} onOpenChange={onOpenChange} open={open}>
+    <Dialog disablePointerDismissal={!connection} onOpenChange={onOpen} open={open}>
       <DialogContent className="p-0">
         <DialogHeader>
           <DialogTitle>Connect to S3</DialogTitle>
@@ -109,7 +104,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                   value={field.state.value}
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}
-                  disabled={isTesting}
+                  disabled={testState === 'PROGRESS'}
                   placeholder="https://bucket.s3.eu-central-1.amazonaws.com/prefix/"
                 />
               </label>
@@ -125,7 +120,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    disabled={isTesting}
+                    disabled={testState === 'PROGRESS'}
                     placeholder="AKIA..."
                   />
                 </label>
@@ -140,7 +135,7 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    disabled={isTesting}
+                    disabled={testState === 'PROGRESS'}
                     placeholder="••••••••"
                   />
                 </label>
@@ -148,27 +143,26 @@ function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
             </form.Field>
           </div>
 
-          {hasValidationError && <p className="text-sm text-destructive">Please fix the form values.</p>}
-          {testErrorMessage && <p className="text-sm text-destructive">{testErrorMessage}</p>}
-          {testSuccessMessage && <p className="text-sm text-emerald-700">{testSuccessMessage}</p>}
+          {testState === 'ERROR' && testMessage && <p className="text-sm text-destructive">{testMessage}</p>}
+          {testState === 'SUCCESS' && testMessage && <p className="text-sm text-emerald-700">{testMessage}</p>}
 
           <DialogFooter>
             {connection && (
-              <Button type="button" onClick={() => onOpenChange(false)} disabled={isTesting} variant="outline">
+              <Button type="button" onClick={() => onOpen(false)} disabled={testState === 'PROGRESS'} variant="outline">
                 Close
               </Button>
             )}
             <Button
               type="button"
-              disabled={isTesting}
+              disabled={testState === 'PROGRESS'}
               onClick={() => {
                 void runConnectionCheck();
               }}
               variant="outline"
             >
-              {isTesting ? 'Testing...' : 'Test'}
+              {testState === 'PROGRESS' ? 'Testing...' : 'Test'}
             </Button>
-            <Button type="submit" disabled={isTesting}>
+            <Button type="submit" disabled={testState === 'PROGRESS'}>
               Connect
             </Button>
           </DialogFooter>
