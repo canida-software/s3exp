@@ -5,13 +5,7 @@ import { type S3Connection } from '@/lib/s3-connections-store';
 
 type ParsedS3Url = { basePrefix: string; bucket: string; endpoint: string; region: string };
 
-export type BrowserEntry = {
-  key: string;
-  kind: 'directory' | 'file';
-  lastModified?: Date;
-  name: string;
-  size?: number;
-};
+export type FileEntry = { type: 'FILE' | 'DIR'; name: string; size?: number; modified?: number };
 
 export const ROOT_PATH = '/';
 
@@ -111,11 +105,11 @@ export function formatFileSize(sizeInBytes?: number): string {
   return `${formattedValue} ${units[unitIndex]}`;
 }
 
-export function formatModifiedDate(value?: Date): string {
+export function formatModifiedDate(value?: number): string {
   if (!value) {
     return '—';
   }
-  return DateTime.fromJSDate(value).toFormat('yyyy-LL-dd HH:mm');
+  return DateTime.fromMillis(value).toFormat('yyyy-LL-dd HH:mm');
 }
 
 export async function testS3Connection(connection: S3Connection): Promise<void> {
@@ -125,37 +119,36 @@ export async function testS3Connection(connection: S3Connection): Promise<void> 
   );
 }
 
-export async function fetchDirectoryEntries(connection: S3Connection, path: string): Promise<BrowserEntry[]> {
+export async function fetchDirectoryEntries(connection: S3Connection, path: string): Promise<FileEntry[]> {
   const { client, target } = createS3Client(connection);
   const prefix = pathToPrefix(path, target.basePrefix);
   const result = await client.send(
     new ListObjectsV2Command({ Bucket: target.bucket, Delimiter: '/', Prefix: prefix || undefined }),
   );
 
-  const directoryEntries: BrowserEntry[] = (result.CommonPrefixes ?? [])
+  const directoryEntries: FileEntry[] = (result.CommonPrefixes ?? [])
     .map((prefixEntry) => prefixEntry.Prefix)
     .filter((prefixValue): prefixValue is string => Boolean(prefixValue))
     .map((prefixValue) => prefixValue.slice(prefix.length).replace(/\/$/, ''))
     .filter((name) => name.length > 0)
-    .map((name) => ({ key: `${prefix}${name}/`, kind: 'directory', name }));
+    .map((name) => ({ name, type: 'DIR' as const }));
 
-  const fileEntries: BrowserEntry[] = (result.Contents ?? [])
+  const fileEntries: FileEntry[] = (result.Contents ?? [])
     .filter((objectValue): objectValue is { Key: string; LastModified?: Date; Size?: number } =>
       Boolean(objectValue.Key),
     )
     .filter((objectValue) => objectValue.Key !== prefix)
     .map((objectValue) => ({
-      key: objectValue.Key,
-      kind: 'file' as const,
-      lastModified: objectValue.LastModified,
+      modified: objectValue.LastModified?.getTime(),
       name: prefix ? objectValue.Key.slice(prefix.length) : objectValue.Key,
       size: objectValue.Size,
+      type: 'FILE' as const,
     }))
     .filter((objectValue) => objectValue.name.length > 0 && !objectValue.name.includes('/'));
 
   return [...directoryEntries, ...fileEntries].sort((left, right) => {
-    if (left.kind !== right.kind) {
-      return left.kind === 'directory' ? -1 : 1;
+    if (left.type !== right.type) {
+      return left.type === 'DIR' ? -1 : 1;
     }
     return left.name.localeCompare(right.name);
   });

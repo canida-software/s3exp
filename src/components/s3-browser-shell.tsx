@@ -5,17 +5,13 @@ import { SignInDialog } from '@/components/sign-in-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { type S3Connection } from '@/lib/s3-connections-store';
-import { formatFileSize, formatModifiedDate, type BrowserEntry } from '@/lib/s3-object-storage';
+import { formatFileSize, formatModifiedDate, type FileEntry } from '@/lib/s3-object-storage';
 
-type EntryTableProps = {
-  entries: BrowserEntry[];
-  isLoading: boolean;
-  onOpenDirectory: (directoryName: string) => void;
-};
+type EntryTableProps = { entries: FileEntry[]; isLoading: boolean; onOpenDirectory: (directoryName: string) => void };
 
 type BrowserShellProps = {
   connection: S3Connection | undefined;
-  entries: BrowserEntry[];
+  entries: FileEntry[];
   goToParentDirectory: () => void;
   isLoading: boolean;
   listError: string | undefined;
@@ -47,9 +43,9 @@ function EntryTable({ entries, isLoading, onOpenDirectory }: EntryTableProps) {
   }
 
   return entries.map((entry) => (
-    <tr className="border-t" key={entry.key}>
+    <tr className="border-t" key={`${entry.type}:${entry.name}`}>
       <td className="px-4 py-2">
-        {entry.kind === 'directory' ? (
+        {entry.type === 'DIR' ? (
           <Button
             className="h-auto justify-start px-0 py-0 font-normal text-foreground hover:text-primary"
             onClick={() => onOpenDirectory(entry.name)}
@@ -68,9 +64,9 @@ function EntryTable({ entries, isLoading, onOpenDirectory }: EntryTableProps) {
         )}
       </td>
       <td className="px-4 py-2 text-right text-muted-foreground">
-        {entry.kind === 'file' ? formatFileSize(entry.size) : '—'}
+        {entry.type === 'FILE' ? formatFileSize(entry.size) : '—'}
       </td>
-      <td className="px-4 py-2 text-right text-muted-foreground">{formatModifiedDate(entry.lastModified)}</td>
+      <td className="px-4 py-2 text-right text-muted-foreground">{formatModifiedDate(entry.modified)}</td>
     </tr>
   ));
 }
