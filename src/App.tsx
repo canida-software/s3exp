@@ -1,9 +1,8 @@
-import { File, Folder, RefreshCcw } from 'lucide-react';
+import { File, Folder, House, RefreshCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { SignInDialog } from '@/components/sign-in-dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import {
@@ -11,7 +10,6 @@ import {
   fetchDirectoryEntries,
   formatFileSize,
   formatModifiedDate,
-  parentPath,
   ROOT_PATH,
   type FileEntry,
 } from '@/lib/s3-object-storage';
@@ -112,6 +110,15 @@ function App() {
     void loadEntries();
   }, [connection, loadEntries, resetBrowser]);
 
+  const pathSegments = currentPath === ROOT_PATH ? [] : currentPath.slice(1).split('/');
+  const breadcrumbItems = [
+    { label: 'Root', path: ROOT_PATH },
+    ...pathSegments.map((segment, index) => ({
+      label: segment,
+      path: `/${pathSegments.slice(0, index + 1).join('/')}`,
+    })),
+  ];
+
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-8">
       <section className="mx-auto flex w-full max-w-6xl flex-col overflow-hidden rounded-xl border bg-white shadow-sm">
@@ -140,17 +147,38 @@ function App() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              disabled={!connection || isLoading || currentPath === ROOT_PATH}
-              onClick={() => setCurrentPath(parentPath(currentPath))}
-              type="button"
-              variant="outline"
-            >
-              Up
-            </Button>
-            <Input readOnly value={currentPath} />
-          </div>
+          <nav aria-label="Breadcrumb" className="overflow-x-auto">
+            <ol className="flex min-h-7 items-center gap-1 whitespace-nowrap text-sm">
+              {breadcrumbItems.map((breadcrumb, index) => {
+                const isCurrent = breadcrumb.path === currentPath;
+                const isRootBreadcrumb = breadcrumb.path === ROOT_PATH;
+                return (
+                  <li className="inline-flex h-7 items-center gap-1" key={breadcrumb.path}>
+                    <Button
+                      aria-current={isCurrent ? 'page' : undefined}
+                      aria-label={isRootBreadcrumb ? 'Root' : undefined}
+                      className={`h-7 px-1 py-0 ${isCurrent ? 'font-medium text-foreground' : 'font-normal'}`}
+                      disabled={!connection || isLoading}
+                      onClick={() => setCurrentPath(breadcrumb.path)}
+                      size="sm"
+                      type="button"
+                      variant="ghost"
+                    >
+                      {isRootBreadcrumb ? (
+                        <>
+                          <House aria-hidden className="size-4" />
+                          {isCurrent && <span className="sr-only">Root</span>}
+                        </>
+                      ) : (
+                        breadcrumb.label
+                      )}
+                    </Button>
+                    {index < breadcrumbItems.length - 1 && <span className="text-muted-foreground">/</span>}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
 
           {listError && <p className="text-sm text-destructive">{listError}</p>}
 
