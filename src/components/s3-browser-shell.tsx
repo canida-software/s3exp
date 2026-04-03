@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { File, Folder, RefreshCcw } from 'lucide-react';
+import { useState } from 'react';
 
 import { SignInDialog } from '@/components/sign-in-dialog';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ function EntryTable({ entries, isLoading, onOpenDirectory }: EntryTableProps) {
   if (isLoading) {
     return (
       <tr>
-        <td className="px-4 py-10 text-center text-muted-foreground" colSpan={4}>
+        <td className="px-4 py-10 text-center text-muted-foreground" colSpan={3}>
           Loading objects...
         </td>
       </tr>
@@ -39,7 +39,7 @@ function EntryTable({ entries, isLoading, onOpenDirectory }: EntryTableProps) {
   if (entries.length === 0) {
     return (
       <tr>
-        <td className="px-4 py-10 text-center text-muted-foreground" colSpan={4}>
+        <td className="px-4 py-10 text-center text-muted-foreground" colSpan={3}>
           This directory is empty.
         </td>
       </tr>
@@ -67,7 +67,6 @@ function EntryTable({ entries, isLoading, onOpenDirectory }: EntryTableProps) {
           </span>
         )}
       </td>
-      <td className="px-4 py-2 capitalize text-muted-foreground">{entry.kind}</td>
       <td className="px-4 py-2 text-right text-muted-foreground">
         {entry.kind === 'file' ? formatFileSize(entry.size) : '—'}
       </td>
@@ -105,7 +104,7 @@ function BrowserShell({
             <Button onClick={() => setIsSignInDialogOpen(true)} type="button">
               Connection
             </Button>
-            <SignInDialog onOpenChange={setIsSignInDialogOpen} open={isSignInDialogOpen} />
+            <SignInDialog onOpen={setIsSignInDialogOpen} open={isSignInDialogOpen} />
           </div>
         </header>
 
@@ -136,7 +135,6 @@ function BrowserShell({
               <thead className="bg-muted/50 text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Type</th>
                   <th className="px-4 py-2 text-right font-medium">Size</th>
                   <th className="px-4 py-2 text-right font-medium">Modified</th>
                 </tr>

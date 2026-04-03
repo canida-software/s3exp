@@ -1,4 +1,5 @@
 import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { DateTime } from 'luxon';
 
 import { type S3Connection } from '@/lib/s3-connections-store';
 
@@ -114,7 +115,7 @@ export function formatModifiedDate(value?: Date): string {
   if (!value) {
     return '—';
   }
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(value);
+  return DateTime.fromJSDate(value).toFormat('yyyy-LL-dd HH:mm');
 }
 
 export async function testS3Connection(connection: S3Connection): Promise<void> {
