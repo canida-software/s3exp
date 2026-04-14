@@ -30,12 +30,14 @@ export async function fetchDirectoryEntries(connection: S3Connection, path: stri
     .filter((prefix) => prefix !== undefined)
     .map((prefix) => ({ type: 'DIR' as const, path: prefix }));
 
-  const fileEntries: FileEntry[] = (result.Contents ?? []).map((objectValue) => ({
-    type: 'FILE' as const,
-    path: objectValue.Key ?? '',
-    modified: objectValue.LastModified?.getTime(),
-    size: objectValue.Size,
-  }));
+  const fileEntries: FileEntry[] = (result.Contents ?? [])
+    .filter((objectValue) => objectValue.Key !== path)
+    .map((objectValue) => ({
+      type: 'FILE' as const,
+      path: objectValue.Key ?? '',
+      modified: objectValue.LastModified?.getTime(),
+      size: objectValue.Size,
+    }));
 
   return [...directoryEntries, ...fileEntries];
 }
