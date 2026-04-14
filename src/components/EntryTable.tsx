@@ -14,9 +14,7 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
 
   const handleEntryClick = (entry: FileEntry) => {
     if (entry.type === 'DIR') return setCurrentPath(entry.path);
-
-    if (!connection) return;
-    void downloadS3File(connection, entry.path);
+    if (entry.type === 'FILE' && connection) return void downloadS3File(connection, entry.path);
   };
 
   return (
@@ -24,7 +22,6 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-0" />
             <TableHead className="text-muted-foreground">Name</TableHead>
             <TableHead className="text-end text-muted-foreground">Size</TableHead>
             <TableHead className="text-end text-muted-foreground">Modified</TableHead>
@@ -33,14 +30,14 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
         <TableBody>
           {isLoading && (
             <TableRow className="hover:bg-transparent">
-              <TableCell className="py-10 text-center" colSpan={4}>
+              <TableCell className="py-10 text-center" colSpan={3}>
                 Loading objects...
               </TableCell>
             </TableRow>
           )}
           {!isLoading && entries.length === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell className="py-10 text-center" colSpan={4}>
+              <TableCell className="py-10 text-center" colSpan={3}>
                 This directory is empty.
               </TableCell>
             </TableRow>
@@ -49,26 +46,24 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
             entries.map((entry) => (
               <TableRow key={entry.path} className="cursor-pointer" onClick={() => handleEntryClick(entry)}>
                 <TableCell>
-                  {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
-                  {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}
-                </TableCell>
-                <TableCell>
                   <span
-                    className="inline-flex w-full min-w-0"
+                    className="inline-flex w-full min-w-0 items-center gap-2"
                     title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
                   >
+                    {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
+                    {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}
                     <span className="min-w-0 truncate">
                       {entry.path.split('/').filter(Boolean).pop() ?? entry.path}
                     </span>
                   </span>
                 </TableCell>
                 <TableCell className="text-end">
-                  {entry.size && formatFileSize(entry.size)}
-                  {!entry.size && '—'}
+                  {entry.size && formatSize(entry.size)}
+                  {!entry.size && '-'}
                 </TableCell>
                 <TableCell className="text-end">
                   {entry.modified && formatModifiedDate(entry.modified)}
-                  {!entry.modified && '—'}
+                  {!entry.modified && '-'}
                 </TableCell>
               </TableRow>
             ))}
@@ -78,18 +73,12 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
   );
 }
 
-// TODO refactor
-function formatFileSize(sizeInBytes: number): string {
+function formatSize(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const exponent = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / 1024 ** exponent;
 
-  let value = sizeInBytes;
-  let unitIndex = 0;
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex += 1;
-  }
-  const formattedValue = value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1);
-  return `${formattedValue} ${units[unitIndex]}`;
+  return `${value.toFixed(1)} ${units[exponent]}`;
 }
 
 function formatModifiedDate(value: number): string {
