@@ -1,17 +1,35 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "react", "import", "oxc"],
+  "jsPlugins": [{ "name": "better-tailwindcss", "specifier": "eslint-plugin-better-tailwindcss" }],
   "categories": { "correctness": "error", "suspicious": "error" },
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": "off",
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": "off",
+    "better-tailwindcss/enforce-consistent-class-order": "error",
+    "better-tailwindcss/enforce-consistent-important-position": "error",
+    "better-tailwindcss/enforce-consistent-line-wrapping": [
+      "error",
+      { "printWidth": 120, "strictness": "loose", "preferSingleLine": true, "indent": 0 }
+    ],
+    "better-tailwindcss/enforce-consistent-variable-syntax": "error",
+    "better-tailwindcss/enforce-consistent-variant-order": "error",
+    "better-tailwindcss/enforce-canonical-classes": "error",
+    "better-tailwindcss/enforce-logical-properties": "error",
+    "better-tailwindcss/enforce-shorthand-classes": "error",
+    "better-tailwindcss/no-conflicting-classes": "error",
+    "better-tailwindcss/no-deprecated-classes": "error",
+    "better-tailwindcss/no-duplicate-classes": "error",
+    "better-tailwindcss/no-restricted-classes": "error",
+    "better-tailwindcss/no-unnecessary-whitespace": "error",
+    "better-tailwindcss/no-unknown-classes": "error",
     "eslint/max-lines": ["error", { "max": 500, "skipBlankLines": false, "skipComments": true }],
     "eslint/max-lines-per-function": ["error", { "max": 180, "skipBlankLines": false, "skipComments": true }]
   },
-  "settings": {},
+  "settings": { "better-tailwindcss": { "entryPoint": "src/index.css" } },
   "env": { "builtin": true },
   "globals": {},
-  "ignorePatterns": ["dist/**", "node_modules/**"]
+  "ignorePatterns": ["dist/**", "node_modules/**", "src/components/ui/**"]
 }

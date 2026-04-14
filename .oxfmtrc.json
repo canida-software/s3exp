@@ -10,5 +10,5 @@
   "objectWrap": "collapse",
   "proseWrap": "never",
   "sortImports": { "newlinesBetween": true, "sortSideEffects": false, "internalPattern": ["@/"] },
-  "ignorePatterns": ["dist/**", "node_modules/**"]
+  "ignorePatterns": ["dist/**", "node_modules/**", "src/components/ui/**"]
 }

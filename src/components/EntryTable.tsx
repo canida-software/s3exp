@@ -4,18 +4,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
-import { childPath, fetchDirectoryEntries, formatFileSize, formatModifiedDate, type FileEntry } from '@/lib/s3-object-storage';
+import {
+  childPath,
+  fetchDirectoryEntries,
+  formatFileSize,
+  formatModifiedDate,
+  type FileEntry,
+} from '@/lib/s3-object-storage';
 
-type EntryTableProps = {
-  onLoadingChange?: (isLoading: boolean) => void;
-  refreshToken: number;
-};
+type EntryTableProps = { onLoadingChange?: (isLoading: boolean) => void; refreshToken: number };
 
-type EntryRowsProps = {
-  entries: FileEntry[];
-  isLoading: boolean;
-  onOpenDirectory: (directoryName: string) => void;
-};
+type EntryRowsProps = { entries: FileEntry[]; isLoading: boolean; onOpenDirectory: (directoryName: string) => void };
 
 function toRawErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.length > 0) {
@@ -46,11 +45,11 @@ function EntryRows({ entries, isLoading, onOpenDirectory }: EntryRowsProps) {
   }
 
   return entries.map((entry) => (
-    <tr className="border-t" key={`${entry.type}:${entry.name}`}>
+    <tr className="border-bs" key={`${entry.type}:${entry.name}`}>
       <td className="px-4 py-2">
         {entry.type === 'DIR' ? (
           <Button
-            className="h-auto justify-start px-0 py-0 font-normal text-foreground hover:text-primary"
+            className="h-auto justify-start p-0 font-normal text-foreground hover:text-primary"
             onClick={() => onOpenDirectory(entry.name)}
             size="sm"
             type="button"
@@ -66,8 +65,10 @@ function EntryRows({ entries, isLoading, onOpenDirectory }: EntryRowsProps) {
           </span>
         )}
       </td>
-      <td className="px-4 py-2 text-right text-muted-foreground">{entry.type === 'FILE' ? formatFileSize(entry.size) : '—'}</td>
-      <td className="px-4 py-2 text-right text-muted-foreground">{formatModifiedDate(entry.modified)}</td>
+      <td className="px-4 py-2 text-end text-muted-foreground">
+        {entry.type === 'FILE' ? formatFileSize(entry.size) : '—'}
+      </td>
+      <td className="px-4 py-2 text-end text-muted-foreground">{formatModifiedDate(entry.modified)}</td>
     </tr>
   ));
 }
@@ -128,11 +129,11 @@ function EntryTable({ onLoadingChange, refreshToken }: EntryTableProps) {
 
       <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left text-muted-foreground">
+          <thead className="bg-muted/50 text-start text-muted-foreground">
             <tr>
               <th className="px-4 py-2 font-medium">Name</th>
-              <th className="px-4 py-2 text-right font-medium">Size</th>
-              <th className="px-4 py-2 text-right font-medium">Modified</th>
+              <th className="px-4 py-2 text-end font-medium">Size</th>
+              <th className="px-4 py-2 text-end font-medium">Modified</th>
             </tr>
           </thead>
           <tbody>

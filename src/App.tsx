@@ -31,10 +31,10 @@ function App() {
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-8">
       <section className="mx-auto flex w-full max-w-6xl flex-col overflow-hidden rounded-xl border bg-white shadow-sm">
-        <header className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <header className="flex flex-col gap-4 border-be p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div>
             <h1 className="text-lg font-semibold tracking-tight">S3 Browser</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Frontend-only browser that talks directly to S3.</p>
+            <p className="mbs-1 text-sm text-muted-foreground">Frontend-only browser for S3.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -61,11 +61,11 @@ function App() {
             </p>
           </div>
           <nav aria-label="Breadcrumb" className="overflow-x-auto">
-            <ol className="flex min-h-7 items-center gap-1 whitespace-nowrap text-sm">
+            <ol className="flex h-7 items-center gap-1 overflow-y-hidden text-sm whitespace-nowrap">
               <li className="inline-flex h-7 items-center gap-1">
                 <Button
                   aria-label="Root"
-                  className="h-7 text-foreground hover:bg-transparent px-1"
+                  className="h-7 px-1 text-foreground hover:bg-transparent"
                   size="sm"
                   variant="ghost"
                   onClick={() => setCurrentPath('/')}
@@ -79,7 +79,7 @@ function App() {
                   <li className="inline-flex h-7 items-center gap-1" key={pathSegment}>
                     <span className="text-muted-foreground">/</span>
                     <Button
-                      className="h-7 text-foreground px-1 hover:bg-transparent"
+                      className="h-7 px-1 text-foreground hover:bg-transparent"
                       onClick={() => setCurrentPath(`/${pathSegments.slice(0, index + 1).join('/')}`)}
                       size="sm"
                       variant="ghost"

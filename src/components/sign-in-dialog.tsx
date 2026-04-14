@@ -26,7 +26,9 @@ const connectionSchema = z.object({
 type TestState = 'PROGRESS' | 'SUCCESS' | 'ERROR';
 type ConnectionFormValues = { url: string; region: string; accessKey: string; secretKey: string };
 
-function toConnectionFormValues(connection: ReturnType<typeof useS3ConnectionsStore.getState>['connection']): ConnectionFormValues {
+function toConnectionFormValues(
+  connection: ReturnType<typeof useS3ConnectionsStore.getState>['connection'],
+): ConnectionFormValues {
   if (!connection) {
     return { url: '', region: DEFAULT_REGION, accessKey: '', secretKey: '' };
   }
