@@ -20,7 +20,7 @@ export async function testS3Connection(connection: S3Connection): Promise<void> 
   await client.send(new ListObjectsV2Command({ Bucket: connection.url, MaxKeys: 1 }));
 }
 
-export async function fetchDirectoryEntries(connection: S3Connection, path: string): Promise<FileEntry[]> {
+export async function fetchS3Entries(connection: S3Connection, path: string): Promise<FileEntry[]> {
   const client = createS3Client(connection);
   const result = await client.send(new ListObjectsV2Command({ Bucket: connection.url, Delimiter: '/', Prefix: path }));
 

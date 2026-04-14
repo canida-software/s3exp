@@ -7,7 +7,7 @@ import { SignInDialog } from '@/components/SignInDialog';
 import { Button } from '@/components/ui/button';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
-import { fetchDirectoryEntries } from '@/lib/s3-object-storage';
+import { fetchS3Entries } from '@/lib/s3-object-storage';
 
 function App() {
   const connection = useS3ConnectionsStore((state) => state.connection);
@@ -38,7 +38,7 @@ function App() {
     latestRequestIdRef.current = requestId;
     setIsTableLoading(true);
 
-    void fetchDirectoryEntries(connection, currentPath)
+    void fetchS3Entries(connection, currentPath)
       .then((nextEntries) => {
         if (requestId !== latestRequestIdRef.current) {
           return;
