@@ -3,64 +3,21 @@ import { DateTime } from 'luxon';
 
 import { type S3Connection } from '@/lib/s3-connections-store';
 
-type ParsedS3Url = { basePrefix: string; bucket: string; endpoint: string; region: string };
+type S3Target = { basePrefix: string; bucket: string };
 
 export type FileEntry = { type: 'FILE' | 'DIR'; name: string; size?: number; modified?: number };
 
 export const ROOT_PATH = '/';
 
-const DEFAULT_REGION = 'us-east-1';
-
-function parseS3Url(rawUrl: string): ParsedS3Url {
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(rawUrl);
-  } catch {
-    throw new Error('Invalid URL. Use an S3 URL like https://bucket.s3.eu-central-1.amazonaws.com/prefix/');
-  }
-
-  if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-    throw new Error('URL must start with http:// or https://');
-  }
-
-  const host = parsedUrl.hostname;
-  const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
-  const virtualHostedMatch = host.match(/^(.+)\.(s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com)$/i);
-  const pathStyleMatch = host.match(/^(s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com)$/i);
-
-  let bucket = '';
-  let endpointHost = '';
-  let prefixSegments: string[] = [];
-
-  if (virtualHostedMatch) {
-    bucket = decodeURIComponent(virtualHostedMatch[1]);
-    endpointHost = virtualHostedMatch[2];
-    prefixSegments = pathSegments;
-  } else if (pathStyleMatch) {
-    if (pathSegments.length === 0) {
-      throw new Error('S3 URL must include the bucket name.');
-    }
-    bucket = decodeURIComponent(pathSegments[0]);
-    endpointHost = pathStyleMatch[1];
-    prefixSegments = pathSegments.slice(1);
-  } else {
-    throw new Error('Unsupported S3 URL format. Use virtual-hosted or path-style S3 URL.');
-  }
-
-  const regionMatch = endpointHost.match(/^s3[.-]([a-z0-9-]+)\.amazonaws\.com$/i);
-  const region = regionMatch?.[1] ?? DEFAULT_REGION;
-  const basePrefix = prefixSegments.length > 0 ? `${prefixSegments.join('/')}/` : '';
-
-  return { basePrefix, bucket, endpoint: `${parsedUrl.protocol}//${endpointHost}`, region };
-}
+export const DEFAULT_REGION = 'eu-central-1';
 
 function createS3Client(connection: S3Connection) {
-  const target = parseS3Url(connection.url);
+  const target: S3Target = { basePrefix: '', bucket: connection.url };
   const client = new S3Client({
+    bucketEndpoint: true,
     credentials: { accessKeyId: connection.accessKey, secretAccessKey: connection.secretKey },
-    endpoint: target.endpoint,
-    forcePathStyle: true,
-    region: target.region,
+    endpoint: connection.url,
+    region: connection.region ?? 'us-central-1',
   });
   return { client, target };
 }

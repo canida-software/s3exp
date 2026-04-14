@@ -14,15 +14,29 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
-import { testS3Connection } from '@/lib/s3-object-storage';
+import { DEFAULT_REGION, testS3Connection } from '@/lib/s3-object-storage';
 
 const connectionSchema = z.object({
   url: z.string().url('Enter a valid S3 URL.'),
+  region: z.string().min(1, 'Region is required.'),
   accessKey: z.string().min(1, 'Access key is required.'),
   secretKey: z.string().min(1, 'Secret key is required.'),
 });
 
 type TestState = 'PROGRESS' | 'SUCCESS' | 'ERROR';
+type ConnectionFormValues = { url: string; region: string; accessKey: string; secretKey: string };
+
+function toConnectionFormValues(connection: ReturnType<typeof useS3ConnectionsStore.getState>['connection']): ConnectionFormValues {
+  if (!connection) {
+    return { url: '', region: DEFAULT_REGION, accessKey: '', secretKey: '' };
+  }
+  return {
+    accessKey: connection.accessKey,
+    region: connection.region?.trim() || DEFAULT_REGION,
+    secretKey: connection.secretKey,
+    url: connection.url,
+  };
+}
 
 function toRawErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.length > 0) {
@@ -40,10 +54,10 @@ function SignInDialog({ open, onOpen }: SignInDialogProps) {
   const [testMessage, setTestMessage] = useState('');
 
   const form = useForm({
-    defaultValues: connection ?? { url: '', accessKey: '', secretKey: '' },
+    defaultValues: toConnectionFormValues(connection),
     validators: { onSubmit: connectionSchema },
     onSubmit: ({ value }) => {
-      saveConnection(value);
+      saveConnection({ ...value, region: value.region.trim() || DEFAULT_REGION });
       setTestState(undefined);
       setTestMessage('');
       onOpen(false);
@@ -74,9 +88,9 @@ function SignInDialog({ open, onOpen }: SignInDialogProps) {
     if (open) {
       setTestState(undefined);
       setTestMessage('');
-      form.reset();
+      form.reset(toConnectionFormValues(connection));
     }
-  }, [open, form]);
+  }, [open, form, connection]);
 
   return (
     <Dialog disablePointerDismissal={!connection} onOpenChange={onOpen} open={open}>
@@ -106,6 +120,21 @@ function SignInDialog({ open, onOpen }: SignInDialogProps) {
                   onBlur={field.handleBlur}
                   disabled={testState === 'PROGRESS'}
                   placeholder="https://bucket.s3.eu-central-1.amazonaws.com/prefix/"
+                />
+              </label>
+            )}
+          </form.Field>
+
+          <form.Field name="region">
+            {(field) => (
+              <label className="grid gap-1.5 text-sm">
+                <span className="text-muted-foreground">Region</span>
+                <Input
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                  disabled={testState === 'PROGRESS'}
+                  placeholder={DEFAULT_REGION}
                 />
               </label>
             )}
