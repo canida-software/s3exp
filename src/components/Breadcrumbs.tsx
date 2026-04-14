@@ -1,6 +1,13 @@
 import { House } from 'lucide-react';
+import { Fragment } from 'react';
 
-import { Button } from '@/components/ui/button';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 
 function Breadcrumbs() {
@@ -10,35 +17,29 @@ function Breadcrumbs() {
   const pathSegments = currentPath.split('/').filter(Boolean);
 
   return (
-    <nav aria-label="Breadcrumb" className="overflow-x-auto">
-      <ol className="flex h-7 items-center gap-1 overflow-y-hidden text-sm whitespace-nowrap">
-        <li className="inline-flex h-7 items-center gap-1">
-          <Button
-            aria-label="Root"
-            className="h-7 px-1 text-foreground hover:bg-transparent"
-            size="sm"
-            variant="ghost"
-            onClick={() => setCurrentPath('')}
-          >
+    <Breadcrumb className="overflow-x-auto">
+      <BreadcrumbList className="h-7 flex-nowrap overflow-y-hidden whitespace-nowrap">
+        <BreadcrumbItem className="h-7">
+          <BreadcrumbLink aria-label="Root" onClick={() => setCurrentPath('')} render={<button type="button" />}>
             <House aria-hidden className="size-4" />
-          </Button>
-        </li>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
 
         {pathSegments.map((pathSegment, index) => (
-          <li className="inline-flex h-7 items-center gap-1" key={`${pathSegment}-${index}`}>
-            <span className="text-muted-foreground">/</span>
-            <Button
-              className="h-7 px-1 text-foreground hover:bg-transparent"
-              onClick={() => setCurrentPath(`${pathSegments.slice(0, index + 1).join('/')}/`)}
-              size="sm"
-              variant="ghost"
-            >
-              {pathSegment}
-            </Button>
-          </li>
+          <Fragment key={index}>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem className="h-7">
+              <BreadcrumbLink
+                onClick={() => setCurrentPath(`${pathSegments.slice(0, index + 1).join('/')}/`)}
+                render={<button type="button" />}
+              >
+                {pathSegment}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </Fragment>
         ))}
-      </ol>
-    </nav>
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 
