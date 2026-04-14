@@ -2,6 +2,7 @@ import { File, Folder } from 'lucide-react';
 import { DateTime } from 'luxon';
 
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { type FileEntry } from '@/lib/s3-object-storage';
 
@@ -12,33 +13,29 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
 
   return (
     <div className="overflow-hidden rounded-lg border">
-      <table className="w-full table-fixed text-sm">
-        <thead className="bg-muted/50 text-start text-muted-foreground">
-          <tr>
-            <th className="max-w-0 px-4 py-2 text-start font-medium">Name</th>
-            <th className="w-24 px-4 py-2 text-end font-medium">Size</th>
-            <th className="w-40 px-4 py-2 text-end font-medium">Modified</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Size</TableHead>
+            <TableHead>Modified</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {isLoading && (
-            <tr>
-              <td className="px-4 py-10 text-center text-muted-foreground" colSpan={3}>
-                Loading objects...
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={3}>Loading objects...</TableCell>
+            </TableRow>
           )}
           {!isLoading && entries.length === 0 && (
-            <tr>
-              <td className="px-4 py-10 text-center text-muted-foreground" colSpan={3}>
-                This directory is empty.
-              </td>
-            </tr>
+            <TableRow>
+              <TableCell colSpan={3}>This directory is empty.</TableCell>
+            </TableRow>
           )}
           {!isLoading &&
             entries.map((entry) => (
-              <tr className="border-bs" key={entry.path}>
-                <td className="px-4 py-2">
+              <TableRow key={entry.path}>
+                <TableCell>
                   {entry.type === 'DIR' && (
                     <Button
                       className="h-auto w-full min-w-0 justify-start p-0 font-normal text-foreground hover:text-primary"
@@ -65,19 +62,19 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
                       </span>
                     </span>
                   )}
-                </td>
-                <td className="px-4 py-2 text-end whitespace-nowrap text-muted-foreground">
+                </TableCell>
+                <TableCell>
                   {entry.size && formatFileSize(entry.size)}
                   {!entry.size && '—'}
-                </td>
-                <td className="px-4 py-2 text-end whitespace-nowrap text-muted-foreground">
+                </TableCell>
+                <TableCell>
                   {entry.modified && formatModifiedDate(entry.modified)}
                   {!entry.modified && '—'}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
