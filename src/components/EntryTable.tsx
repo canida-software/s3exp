@@ -1,7 +1,6 @@
 import { File, Folder } from 'lucide-react';
 import { DateTime } from 'luxon';
 
-import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { type FileEntry } from '@/lib/s3-object-storage';
@@ -23,45 +22,37 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
         </TableHeader>
         <TableBody>
           {isLoading && (
-            <TableRow>
-              <TableCell colSpan={3}>Loading objects...</TableCell>
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="py-10 text-center" colSpan={3}>
+                Loading objects...
+              </TableCell>
             </TableRow>
           )}
           {!isLoading && entries.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={3}>This directory is empty.</TableCell>
+            <TableRow className="hover:bg-transparent">
+              <TableCell className="py-10 text-center" colSpan={3}>
+                This directory is empty.
+              </TableCell>
             </TableRow>
           )}
           {!isLoading &&
             entries.map((entry) => (
-              <TableRow key={entry.path}>
+              <TableRow
+                key={entry.path}
+                className="cursor-pointer"
+                onClick={entry.type === 'DIR' ? () => setCurrentPath(entry.path) : undefined}
+              >
                 <TableCell>
-                  {entry.type === 'DIR' && (
-                    <Button
-                      className="h-auto w-full min-w-0 justify-start p-0 font-normal text-foreground hover:text-primary"
-                      onClick={() => setCurrentPath(entry.path)}
-                      size="sm"
-                      title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Folder className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 truncate">
-                        {entry.path.split('/').filter(Boolean).pop() ?? entry.path}
-                      </span>
-                    </Button>
-                  )}
-                  {entry.type === 'FILE' && (
-                    <span
-                      className="inline-flex w-full min-w-0 items-center gap-2"
-                      title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
-                    >
-                      <File className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 truncate">
-                        {entry.path.split('/').filter(Boolean).pop() ?? entry.path}
-                      </span>
+                  <span
+                    className="inline-flex w-full min-w-0 items-center gap-2"
+                    title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
+                  >
+                    {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
+                    {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}
+                    <span className="min-w-0 truncate">
+                      {entry.path.split('/').filter(Boolean).pop() ?? entry.path}
                     </span>
-                  )}
+                  </span>
                 </TableCell>
                 <TableCell>
                   {entry.size && formatFileSize(entry.size)}
