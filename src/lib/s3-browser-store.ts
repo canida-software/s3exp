@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { ROOT_PATH, type FileEntry } from '@/lib/s3-object-storage';
+import { type FileEntry } from '@/lib/s3-object-storage';
 
 type S3BrowserStore = {
   currentEntries: FileEntry[];
@@ -12,8 +12,8 @@ type S3BrowserStore = {
 
 export const useS3BrowserStore = create<S3BrowserStore>()((set) => ({
   currentEntries: [],
-  currentPath: ROOT_PATH,
+  currentPath: '',
   setCurrentEntries: (entries) => set({ currentEntries: entries }),
   setCurrentPath: (path) => set({ currentPath: path }),
-  reset: () => set({ currentEntries: [], currentPath: ROOT_PATH }),
+  reset: () => set({ currentEntries: [], currentPath: '' }),
 }));

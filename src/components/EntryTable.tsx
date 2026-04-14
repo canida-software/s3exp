@@ -1,29 +1,16 @@
 import { File, Folder } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { DateTime } from 'luxon';
 
 import { Button } from '@/components/ui/button';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
-import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
-import {
-  childPath,
-  fetchDirectoryEntries,
-  formatFileSize,
-  formatModifiedDate,
-  type FileEntry,
-} from '@/lib/s3-object-storage';
+import { type FileEntry } from '@/lib/s3-object-storage';
 
-type EntryTableProps = { onLoadingChange?: (isLoading: boolean) => void; refreshToken: number };
+type EntryTableProps = { entries: FileEntry[]; isLoading: boolean; listError?: string };
+type EntryRowsProps = { entries: FileEntry[]; isLoading: boolean };
 
-type EntryRowsProps = { entries: FileEntry[]; isLoading: boolean; onOpenDirectory: (directoryName: string) => void };
+function EntryRows({ entries, isLoading }: EntryRowsProps) {
+  const setCurrentPath = useS3BrowserStore((state) => state.setCurrentPath);
 
-function toRawErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-  return String(error);
-}
-
-function EntryRows({ entries, isLoading, onOpenDirectory }: EntryRowsProps) {
   if (isLoading) {
     return (
       <tr>
@@ -45,84 +32,40 @@ function EntryRows({ entries, isLoading, onOpenDirectory }: EntryRowsProps) {
   }
 
   return entries.map((entry) => (
-    <tr className="border-bs" key={`${entry.type}:${entry.name}`}>
+    <tr className="border-bs" key={`${entry.type}:${entry.path}`}>
       <td className="px-4 py-2">
-        {entry.type === 'DIR' ? (
+        {entry.type === 'DIR' && (
           <Button
             className="h-auto justify-start p-0 font-normal text-foreground hover:text-primary"
-            onClick={() => onOpenDirectory(entry.name)}
+            onClick={() => setCurrentPath(entry.path)}
             size="sm"
             type="button"
             variant="ghost"
           >
             <Folder className="size-4 text-muted-foreground" />
-            {entry.name}
+            {entry.path.split('/').filter(Boolean).pop()}
           </Button>
-        ) : (
+        )}
+        {entry.type === 'FILE' && (
           <span className="inline-flex items-center gap-2">
             <File className="size-4 text-muted-foreground" />
-            {entry.name}
+            {entry.path.split('/').filter(Boolean).pop()}
           </span>
         )}
       </td>
       <td className="px-4 py-2 text-end text-muted-foreground">
-        {entry.type === 'FILE' ? formatFileSize(entry.size) : '—'}
+        {entry.size && formatFileSize(entry.size)}
+        {!entry.size && '—'}
       </td>
-      <td className="px-4 py-2 text-end text-muted-foreground">{formatModifiedDate(entry.modified)}</td>
+      <td className="px-4 py-2 text-end text-muted-foreground">
+        {entry.modified && formatModifiedDate(entry.modified)}
+        {!entry.modified && '—'}
+      </td>
     </tr>
   ));
 }
 
-function EntryTable({ onLoadingChange, refreshToken }: EntryTableProps) {
-  const connection = useS3ConnectionsStore((state) => state.connection);
-  const currentEntries = useS3BrowserStore((state) => state.currentEntries);
-  const currentPath = useS3BrowserStore((state) => state.currentPath);
-  const setCurrentEntries = useS3BrowserStore((state) => state.setCurrentEntries);
-  const setCurrentPath = useS3BrowserStore((state) => state.setCurrentPath);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [listError, setListError] = useState<string>();
-  const latestRequestIdRef = useRef(0);
-
-  const loadEntries = useCallback(async () => {
-    if (!connection) {
-      setCurrentEntries([]);
-      setListError(undefined);
-      setIsLoading(false);
-      onLoadingChange?.(false);
-      return;
-    }
-
-    const requestId = latestRequestIdRef.current + 1;
-    latestRequestIdRef.current = requestId;
-    setIsLoading(true);
-    onLoadingChange?.(true);
-    setListError(undefined);
-
-    try {
-      const entries = await fetchDirectoryEntries(connection, currentPath);
-      if (requestId !== latestRequestIdRef.current) {
-        return;
-      }
-      setCurrentEntries(entries);
-    } catch (error) {
-      if (requestId !== latestRequestIdRef.current) {
-        return;
-      }
-      setCurrentEntries([]);
-      setListError(toRawErrorMessage(error));
-    } finally {
-      if (requestId === latestRequestIdRef.current) {
-        setIsLoading(false);
-        onLoadingChange?.(false);
-      }
-    }
-  }, [connection, currentPath, onLoadingChange, setCurrentEntries]);
-
-  useEffect(() => {
-    void loadEntries();
-  }, [loadEntries, refreshToken]);
-
+function EntryTable({ entries, isLoading, listError }: EntryTableProps) {
   return (
     <>
       {listError && <p className="text-sm text-destructive">{listError}</p>}
@@ -131,22 +74,36 @@ function EntryTable({ onLoadingChange, refreshToken }: EntryTableProps) {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-start text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 font-medium">Name</th>
+              <th className="px-4 py-2 text-start font-medium">Name</th>
               <th className="px-4 py-2 text-end font-medium">Size</th>
               <th className="px-4 py-2 text-end font-medium">Modified</th>
             </tr>
           </thead>
           <tbody>
-            <EntryRows
-              entries={currentEntries}
-              isLoading={isLoading}
-              onOpenDirectory={(directoryName) => setCurrentPath(childPath(currentPath, directoryName))}
-            />
+            <EntryRows entries={entries} isLoading={isLoading} />
           </tbody>
         </table>
       </div>
     </>
   );
+}
+
+// TODO refactor
+function formatFileSize(sizeInBytes: number): string {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  let value = sizeInBytes;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+  const formattedValue = value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1);
+  return `${formattedValue} ${units[unitIndex]}`;
+}
+
+function formatModifiedDate(value: number): string {
+  return DateTime.fromMillis(value).toFormat('yyyy-LL-dd HH:mm');
 }
 
 export default EntryTable;

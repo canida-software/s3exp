@@ -1,5 +1,5 @@
 import { RefreshCcw } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Breadcrumbs from '@/components/Breadcrumbs';
 import EntryTable from '@/components/EntryTable';
@@ -7,22 +7,67 @@ import { SignInDialog } from '@/components/sign-in-dialog';
 import { Button } from '@/components/ui/button';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
+import { fetchDirectoryEntries } from '@/lib/s3-object-storage';
+
+function toRawErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.length > 0) {
+    return error.message;
+  }
+  return String(error);
+}
 
 function App() {
   const connection = useS3ConnectionsStore((state) => state.connection);
 
+  const currentEntries = useS3BrowserStore((state) => state.currentEntries);
+  const currentPath = useS3BrowserStore((state) => state.currentPath);
+  const setCurrentEntries = useS3BrowserStore((state) => state.setCurrentEntries);
   const resetBrowser = useS3BrowserStore((state) => state.reset);
 
+  const [listError, setListError] = useState<string>();
   const [entryTableRefreshToken, setEntryTableRefreshToken] = useState(0);
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [isTableLoading, setIsTableLoading] = useState(false);
+  const latestRequestIdRef = useRef(0);
 
   useEffect(() => {
     if (!connection) {
       resetBrowser();
+      setListError(undefined);
       setIsTableLoading(false);
     }
   }, [connection, resetBrowser]);
+
+  useEffect(() => {
+    if (!connection) {
+      return;
+    }
+
+    const requestId = latestRequestIdRef.current + 1;
+    latestRequestIdRef.current = requestId;
+    setIsTableLoading(true);
+    setListError(undefined);
+
+    void fetchDirectoryEntries(connection, currentPath)
+      .then((nextEntries) => {
+        if (requestId !== latestRequestIdRef.current) {
+          return;
+        }
+        setCurrentEntries(nextEntries);
+      })
+      .catch((error: unknown) => {
+        if (requestId !== latestRequestIdRef.current) {
+          return;
+        }
+        setCurrentEntries([]);
+        setListError(toRawErrorMessage(error));
+      })
+      .finally(() => {
+        if (requestId === latestRequestIdRef.current) {
+          setIsTableLoading(false);
+        }
+      });
+  }, [connection, currentPath, entryTableRefreshToken, setCurrentEntries]);
 
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-8">
@@ -58,7 +103,7 @@ function App() {
           </div>
           <Breadcrumbs />
 
-          <EntryTable onLoadingChange={setIsTableLoading} refreshToken={entryTableRefreshToken} />
+          <EntryTable entries={currentEntries} isLoading={isTableLoading} listError={listError} />
         </div>
       </section>
     </main>

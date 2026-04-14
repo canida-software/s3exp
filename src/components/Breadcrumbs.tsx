@@ -7,7 +7,7 @@ function Breadcrumbs() {
   const currentPath = useS3BrowserStore((state) => state.currentPath);
   const setCurrentPath = useS3BrowserStore((state) => state.setCurrentPath);
 
-  const pathSegments = currentPath.split('/').slice(1);
+  const pathSegments = currentPath.split('/').filter(Boolean);
 
   return (
     <nav aria-label="Breadcrumb" className="overflow-x-auto">
@@ -18,7 +18,7 @@ function Breadcrumbs() {
             className="h-7 px-1 text-foreground hover:bg-transparent"
             size="sm"
             variant="ghost"
-            onClick={() => setCurrentPath('/')}
+            onClick={() => setCurrentPath('')}
           >
             <House aria-hidden className="size-4" />
           </Button>
@@ -29,7 +29,7 @@ function Breadcrumbs() {
             <span className="text-muted-foreground">/</span>
             <Button
               className="h-7 px-1 text-foreground hover:bg-transparent"
-              onClick={() => setCurrentPath(`/${pathSegments.slice(0, index + 1).join('/')}`)}
+              onClick={() => setCurrentPath(`${pathSegments.slice(0, index + 1).join('/')}/`)}
               size="sm"
               variant="ghost"
             >
