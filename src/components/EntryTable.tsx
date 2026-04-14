@@ -15,22 +15,23 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Modified</TableHead>
+            <TableHead className="w-0" />
+            <TableHead className="text-muted-foreground">Name</TableHead>
+            <TableHead className="text-end text-muted-foreground">Size</TableHead>
+            <TableHead className="text-end text-muted-foreground">Modified</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && (
             <TableRow className="hover:bg-transparent">
-              <TableCell className="py-10 text-center" colSpan={3}>
+              <TableCell className="py-10 text-center" colSpan={4}>
                 Loading objects...
               </TableCell>
             </TableRow>
           )}
           {!isLoading && entries.length === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell className="py-10 text-center" colSpan={3}>
+              <TableCell className="py-10 text-center" colSpan={4}>
                 This directory is empty.
               </TableCell>
             </TableRow>
@@ -43,22 +44,24 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
                 onClick={entry.type === 'DIR' ? () => setCurrentPath(entry.path) : undefined}
               >
                 <TableCell>
+                  {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
+                  {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}
+                </TableCell>
+                <TableCell>
                   <span
-                    className="inline-flex w-full min-w-0 items-center gap-2"
+                    className="inline-flex w-full min-w-0"
                     title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
                   >
-                    {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
-                    {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}
                     <span className="min-w-0 truncate">
                       {entry.path.split('/').filter(Boolean).pop() ?? entry.path}
                     </span>
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-end">
                   {entry.size && formatFileSize(entry.size)}
                   {!entry.size && '—'}
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-end">
                   {entry.modified && formatModifiedDate(entry.modified)}
                   {!entry.modified && '—'}
                 </TableCell>
