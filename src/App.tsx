@@ -9,13 +9,6 @@ import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
 import { fetchDirectoryEntries } from '@/lib/s3-object-storage';
 
-function toRawErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-  return String(error);
-}
-
 function App() {
   const connection = useS3ConnectionsStore((state) => state.connection);
 
@@ -24,7 +17,6 @@ function App() {
   const setCurrentEntries = useS3BrowserStore((state) => state.setCurrentEntries);
   const resetBrowser = useS3BrowserStore((state) => state.reset);
 
-  const [listError, setListError] = useState<string>();
   const [entryTableRefreshToken, setEntryTableRefreshToken] = useState(0);
   const [isSignInDialogOpen, setIsSignInDialogOpen] = useState(false);
   const [isTableLoading, setIsTableLoading] = useState(false);
@@ -33,7 +25,6 @@ function App() {
   useEffect(() => {
     if (!connection) {
       resetBrowser();
-      setListError(undefined);
       setIsTableLoading(false);
     }
   }, [connection, resetBrowser]);
@@ -46,7 +37,6 @@ function App() {
     const requestId = latestRequestIdRef.current + 1;
     latestRequestIdRef.current = requestId;
     setIsTableLoading(true);
-    setListError(undefined);
 
     void fetchDirectoryEntries(connection, currentPath)
       .then((nextEntries) => {
@@ -55,12 +45,11 @@ function App() {
         }
         setCurrentEntries(nextEntries);
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (requestId !== latestRequestIdRef.current) {
           return;
         }
         setCurrentEntries([]);
-        setListError(toRawErrorMessage(error));
       })
       .finally(() => {
         if (requestId === latestRequestIdRef.current) {
@@ -103,7 +92,7 @@ function App() {
           </div>
           <Breadcrumbs />
 
-          <EntryTable entries={currentEntries} isLoading={isTableLoading} listError={listError} />
+          <EntryTable entries={currentEntries} isLoading={isTableLoading} />
         </div>
       </section>
     </main>
