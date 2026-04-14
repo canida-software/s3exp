@@ -36,28 +36,32 @@ function EntryRows({ entries, isLoading }: EntryRowsProps) {
       <td className="px-4 py-2">
         {entry.type === 'DIR' && (
           <Button
-            className="h-auto justify-start p-0 font-normal text-foreground hover:text-primary"
+            className="h-auto w-full min-w-0 justify-start p-0 font-normal text-foreground hover:text-primary"
             onClick={() => setCurrentPath(entry.path)}
             size="sm"
+            title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
             type="button"
             variant="ghost"
           >
-            <Folder className="size-4 text-muted-foreground" />
-            {entry.path.split('/').filter(Boolean).pop()}
+            <Folder className="size-4 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 truncate">{entry.path.split('/').filter(Boolean).pop() ?? entry.path}</span>
           </Button>
         )}
         {entry.type === 'FILE' && (
-          <span className="inline-flex items-center gap-2">
-            <File className="size-4 text-muted-foreground" />
-            {entry.path.split('/').filter(Boolean).pop()}
+          <span
+            className="inline-flex w-full min-w-0 items-center gap-2"
+            title={entry.path.split('/').filter(Boolean).pop() ?? entry.path}
+          >
+            <File className="size-4 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 truncate">{entry.path.split('/').filter(Boolean).pop() ?? entry.path}</span>
           </span>
         )}
       </td>
-      <td className="px-4 py-2 text-end text-muted-foreground">
+      <td className="px-4 py-2 text-end whitespace-nowrap text-muted-foreground">
         {entry.size && formatFileSize(entry.size)}
         {!entry.size && '—'}
       </td>
-      <td className="px-4 py-2 text-end text-muted-foreground">
+      <td className="px-4 py-2 text-end whitespace-nowrap text-muted-foreground">
         {entry.modified && formatModifiedDate(entry.modified)}
         {!entry.modified && '—'}
       </td>
@@ -71,12 +75,12 @@ function EntryTable({ entries, isLoading, listError }: EntryTableProps) {
       {listError && <p className="text-sm text-destructive">{listError}</p>}
 
       <div className="overflow-hidden rounded-lg border">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead className="bg-muted/50 text-start text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 text-start font-medium">Name</th>
-              <th className="px-4 py-2 text-end font-medium">Size</th>
-              <th className="px-4 py-2 text-end font-medium">Modified</th>
+              <th className="max-w-0 px-4 py-2 text-start font-medium">Name</th>
+              <th className="w-24 px-4 py-2 text-end font-medium">Size</th>
+              <th className="w-40 px-4 py-2 text-end font-medium">Modified</th>
             </tr>
           </thead>
           <tbody>
