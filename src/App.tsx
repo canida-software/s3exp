@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import Breadcrumbs from '@/components/Breadcrumbs';
 import EntryTable from '@/components/EntryTable';
-import { SignInDialog } from '@/components/sign-in-dialog';
+import { SignInDialog } from '@/components/SignInDialog';
 import { Button } from '@/components/ui/button';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
 import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
