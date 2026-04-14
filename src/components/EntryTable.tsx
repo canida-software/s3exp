@@ -3,12 +3,21 @@ import { DateTime } from 'luxon';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useS3BrowserStore } from '@/lib/s3-browser-store';
-import { type FileEntry } from '@/lib/s3-object-storage';
+import { useS3ConnectionsStore } from '@/lib/s3-connections-store';
+import { downloadS3File, type FileEntry } from '@/lib/s3-object-storage';
 
 type EntryTableProps = { entries: FileEntry[]; isLoading: boolean };
 
 function EntryTable({ entries, isLoading }: EntryTableProps) {
+  const connection = useS3ConnectionsStore((state) => state.connection);
   const setCurrentPath = useS3BrowserStore((state) => state.setCurrentPath);
+
+  const handleEntryClick = (entry: FileEntry) => {
+    if (entry.type === 'DIR') return setCurrentPath(entry.path);
+
+    if (!connection) return;
+    void downloadS3File(connection, entry.path);
+  };
 
   return (
     <div className="overflow-hidden rounded-lg border">
@@ -38,11 +47,7 @@ function EntryTable({ entries, isLoading }: EntryTableProps) {
           )}
           {!isLoading &&
             entries.map((entry) => (
-              <TableRow
-                key={entry.path}
-                className="cursor-pointer"
-                onClick={entry.type === 'DIR' ? () => setCurrentPath(entry.path) : undefined}
-              >
+              <TableRow key={entry.path} className="cursor-pointer" onClick={() => handleEntryClick(entry)}>
                 <TableCell>
                   {entry.type === 'DIR' && <Folder className="size-4 shrink-0 text-muted-foreground" />}
                   {entry.type === 'FILE' && <File className="size-4 shrink-0 text-muted-foreground" />}

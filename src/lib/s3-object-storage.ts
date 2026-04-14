@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 
 import { type S3Connection } from '@/lib/s3-connections-store';
 
@@ -40,4 +40,23 @@ export async function fetchS3Entries(connection: S3Connection, path: string): Pr
     }));
 
   return [...directoryEntries, ...fileEntries];
+}
+
+export async function downloadS3File(connection: S3Connection, path: string): Promise<void> {
+  const client = createS3Client(connection);
+  const result = await client.send(new GetObjectCommand({ Bucket: connection.url, Key: path }));
+  if (!result.Body) throw new Error(`No file body for path "${path}".`);
+
+  const fileName = path.split('/').filter(Boolean).pop() ?? 'download';
+  const bytes = await result.Body.transformToByteArray();
+  const blob = new Blob([bytes], { type: result.ContentType ?? 'application/octet-stream' });
+  const objectUrl = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
 }
